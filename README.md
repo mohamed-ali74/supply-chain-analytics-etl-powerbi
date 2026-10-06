@@ -14,7 +14,7 @@ This repository presents a complete, production-grade supply chain data engineer
 
 ---
 
-## 🏗️️ Data Architecture & Star Schema
+## 🏗 Data Architecture & Star Schema
 
 | Table Name | Type | Key Columns | Description |
 | :--- | :--- | :--- | :--- |
@@ -61,3 +61,67 @@ This repository presents a complete, production-grade supply chain data engineer
 * `power_bi_dashboard.pbix` — Interactive Power BI report file
 * `dashboard_preview.png` — Screenshot preview for documentation
 * `README.md` — Project documentation
+
+---
+
+## 📊 DAX Measures & Analytical Logic
+
+This project leverages DAX (Data Analysis Expressions) to deliver key business metrics, performance indicators, and time-intelligence insights:
+
+1. **Total Revenue**
+   ```dax
+   total revenue = SUM(fact_orders[sales])
+Purpose: Calculates total direct sales revenue across all completed transactions.
+
+2. **Total Valor Inventario (Total Inventory Value)**
+
+```dax
+Total Valor Inventario = 
+SUMX(
+    fact_orders,
+    fact_orders[order_item_quantity] * RELATED(dim_product[product_price])
+)
+```
+Purpose: Computes the total monetary value of ordered inventory row-by-row by multiplying order quantity with the product price fetched from the Product Dimension via RELATED().
+
+3. **All Category Revenue**
+
+```dax
+all category revenue = CALCULATE([total revenue], ALL(dim_product[category_name]))
+```
+Purpose: Evaluates total revenue across all product categories by overriding existing category filters using ALL(). Serves as the benchmark baseline for market share metrics.
+
+4. **Category Sales Contribution (%)**
+
+```dax
+category_sales_contribution = DIVIDE([total revenue], [all category revenue])
+```
+Purpose: Determines the percentage contribution of each product category to total sales. Uses DIVIDE() to safely handle zero-denominator exceptions.
+
+5 **PM (Previous Month Value)**
+
+```dax
+pm = CALCULATE([Total Valor Inventario], DATEADD(dim_date[Date], -1, MONTH))
+```
+Purpose: Applies Time Intelligence (DATEADD) to extract inventory value from the prior month for MoM comparative analysis.
+
+6. **PY (Previous Year Value)**
+
+```dax
+PY = CALCULATE([Total Valor Inventario], DATEADD(dim_date[Date], -1, YEAR))
+```
+Purpose: Retrieves the equivalent inventory value from the previous year to evaluate YoY trends.
+
+7. **Month-over-Month Growth (MoM %)**
+
+```dax
+month_growth = DIVIDE([Total Valor Inventario] - [pm], [pm])
+```
+Purpose: Measures period-over-period percentage growth relative to the previous month.
+
+8. **Year-over-Year Sales Growth (YoY %)**
+
+```dax
+Sales YoY Growth = DIVIDE([Total Valor Inventario] - [PY], [PY])
+```
+Purpose: Tracks annual performance momentum by calculating the year-over-year percentage variance in inventory value.
